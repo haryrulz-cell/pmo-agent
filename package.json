@@ -1,0 +1,6 @@
+{
+  "name": "pmo-agent",
+  "version": "1.0.0",
+  "description": "PMO Agent — AI-powered project management assistant based on PMBOK 7",
+  "engines": { "node": ">=18.0.0" }
+}
