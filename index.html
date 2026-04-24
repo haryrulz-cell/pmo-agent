@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMO Agent — Project & Technology Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0d0f;--bg2:#111114;--surface:#16161a;--surface2:#1c1c22;--surface3:#222228;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--accent:#0078d4;--accent2:#106ebe;--accent-glow:rgba(0,120,212,0.15);--accent-soft:rgba(0,120,212,0.1);--purple:#8b5cf6;--purple-soft:rgba(139,92,246,0.1);--green:#22c55e;--green-soft:rgba(34,197,94,0.1);--amber:#f59e0b;--amber-soft:rgba(245,158,11,0.1);--red:#ef4444;--red-soft:rgba(239,68,68,0.1);--cyan:#06b6d4;--cyan-soft:rgba(6,182,212,0.1);--text:#f1f1f3;--text2:#9999aa;--text3:#55556a;--font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px}
+
+/* ── LOGIN OVERLAY ── */
+.login-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(12px);z-index:1000;display:flex;align-items:center;justify-content:center;animation:fadeIn .3s ease}
+.login-overlay.hidden{display:none}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.login-card{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:40px;width:420px;max-width:92vw;animation:slideUp .35s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.login-icon{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 20px;box-shadow:0 0 30px var(--accent-glow)}
+.login-title{font-size:22px;font-weight:700;text-align:center;margin-bottom:6px;letter-spacing:-0.4px}
+.login-sub{font-size:13px;color:var(--text2);text-align:center;margin-bottom:28px;line-height:1.6}
+.login-label{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;display:block}
+.login-input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:11px 14px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s;margin-bottom:14px}
+.login-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.login-input::placeholder{color:var(--text3)}
+.login-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),var(--purple));border:none;border-radius:10px;color:white;font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;margin-top:4px;letter-spacing:.02em;box-shadow:0 0 20px var(--accent-glow)}
+.login-btn:hover{opacity:.88;transform:translateY(-1px)}
+.login-btn:active{transform:translateY(0)}
+.login-note{font-size:11px;color:var(--text3);text-align:center;margin-top:16px;line-height:1.6}
+
+/* ── HEADER ── */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:56px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;z-index:100}
+.logo{display:flex;align-items:center;gap:12px}
+.lmark{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;box-shadow:0 0 20px var(--accent-glow)}
+.lname{font-size:16px;font-weight:700;color:var(--text);letter-spacing:-0.3px}
+.lsub{font-size:10px;color:var(--text3);margin-top:1px;letter-spacing:.05em;text-transform:uppercase}
+.hdr-right{display:flex;align-items:center;gap:10px}
+.hbs{display:flex;align-items:center;gap:6px}
+.hb{font-size:10px;font-weight:500;padding:3px 10px;border-radius:20px;border:1px solid var(--border2);color:var(--text2);background:var(--surface2);letter-spacing:.04em;transition:all .2s}
+.hb:hover{border-color:var(--accent);color:var(--accent)}
+.hb.live{background:var(--green-soft);color:var(--green);border-color:rgba(34,197,94,.3);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
+.user-badge{display:flex;align-items:center;gap:8px;padding:5px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:20px;cursor:pointer;transition:all .2s}
+.user-badge:hover{border-color:var(--accent)}
+.user-avatar{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;flex-shrink:0}
+.user-name{font-size:11px;font-weight:500;color:var(--text2);max-width:100px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── LAYOUT ── */
+.layout{display:flex;flex:1;overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sb{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:8px 0}
+.slbl{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:12px 14px 5px;display:flex;align-items:center;gap:6px}
+.slbl-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0}
+.sbtn{display:flex;align-items:center;gap:9px;padding:7px 14px;width:100%;background:none;border:none;border-left:2px solid transparent;cursor:pointer;font-family:var(--font);font-size:12px;color:var(--text2);text-align:left;transition:all .15s;line-height:1.3}
+.sbtn:hover{background:var(--surface2);color:var(--text);border-left-color:var(--border2)}
+.sbtn.active{background:var(--accent-soft);color:var(--accent);border-left-color:var(--accent);font-weight:500}
+.sbtn .si{font-size:12px;width:16px;text-align:center;flex-shrink:0;opacity:.8}
+.sdv{height:1px;background:var(--border);margin:6px 14px}
+
+/* ── CHAT ── */
+.chat{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;background:var(--bg2)}
+.msgs{flex:1;overflow-y:auto;padding:28px 24px;display:flex;flex-direction:column;gap:20px}
+
+/* ── WELCOME ── */
+.wlc{text-align:center;padding:40px 16px 32px;max-width:660px;margin:0 auto;animation:fadeup .6s ease}
+@keyframes fadeup{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.wi{font-size:48px;margin-bottom:16px;display:block}
+.wlc h1{font-size:26px;font-weight:700;letter-spacing:-.5px;margin-bottom:10px;background:linear-gradient(135deg,var(--text) 40%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.wlc p{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:28px}
+.qg{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:560px;margin:0 auto}
+.qc{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;text-align:left;transition:all .2s;position:relative;overflow:hidden}
+.qc::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--accent-soft),transparent);opacity:0;transition:opacity .2s}
+.qc:hover{border-color:rgba(0,120,212,.4);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.qc:hover::before{opacity:1}
+.qt{font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:4px;position:relative}
+.qd{font-size:11px;color:var(--text3);line-height:1.4;position:relative}
+
+/* ── MESSAGES ── */
+.msg{display:flex;gap:12px;max-width:820px;animation:fadeup .25s ease}
+.msg.user{flex-direction:row-reverse;margin-left:auto}
+.av{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;letter-spacing:.02em}
+.msg.assistant .av{background:linear-gradient(135deg,var(--accent),var(--purple));color:white;box-shadow:0 0 12px var(--accent-glow)}
+.msg.user .av{background:var(--surface3);border:1px solid var(--border2);color:var(--text2)}
+.bub{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 18px;font-size:13.5px;line-height:1.75;color:var(--text);max-width:700px}
+.msg.user .bub{background:var(--surface2);border-color:var(--border2)}
+.bub h3{font-size:13.5px;font-weight:600;color:var(--text);margin:16px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.bub h3:first-child{margin-top:0}
+.bub p{color:var(--text2);margin-bottom:8px;line-height:1.75}
+.bub p:last-child{margin-bottom:0}
+.bub ul,.bub ol{padding-left:20px;color:var(--text2);margin-bottom:8px}
+.bub li{margin-bottom:4px;line-height:1.6}
+.bub strong{color:var(--text);font-weight:600}
+.bub code{background:var(--surface3);border:1px solid var(--border2);padding:2px 6px;border-radius:5px;font-family:var(--mono);font-size:11.5px;color:var(--cyan)}
+.bub hr{border:none;border-top:1px solid var(--border);margin:12px 0}
+.bub table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12.5px}
+.bub th{background:var(--surface3);border:1px solid var(--border2);padding:8px 12px;font-weight:600;text-align:left;color:var(--text);font-size:12px}
+.bub td{border:1px solid var(--border);padding:7px 12px;color:var(--text2);vertical-align:top}
+.bub tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;margin:0 3px 8px 0;letter-spacing:.04em}
+.pb{background:var(--accent-soft);color:var(--accent);border:1px solid rgba(0,120,212,.3)}
+.pg{background:var(--green-soft);color:var(--green);border:1px solid rgba(34,197,94,.3)}
+.pa{background:var(--amber-soft);color:var(--amber);border:1px solid rgba(245,158,11,.3)}
+.pp{background:var(--purple-soft);color:var(--purple);border:1px solid rgba(139,92,246,.3)}
+.pc{background:var(--cyan-soft);color:var(--cyan);border:1px solid rgba(6,182,212,.3)}
+
+.dl-btn{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:8px 16px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:8px;color:white;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+.dl-btn:hover{opacity:.85;transform:translateY(-1px);box-shadow:0 4px 16px var(--accent-glow)}
+.dl-btn svg{width:14px;height:14px;flex-shrink:0}
+
+/* ── TYPING ── */
+.typing-dots{display:flex;gap:5px;align-items:center;padding:4px 2px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:bop 1.4s infinite}
+.dot:nth-child(2){animation-delay:.2s;background:var(--purple)}
+.dot:nth-child(3){animation-delay:.4s;background:var(--cyan)}
+@keyframes bop{0%,80%,100%{transform:translateY(0);opacity:.3}40%{transform:translateY(-5px);opacity:1}}
+
+/* ── INPUT ── */
+.ia{border-top:1px solid var(--border);padding:16px 24px;background:var(--surface);flex-shrink:0}
+.ir{display:flex;gap:10px;align-items:flex-end;max-width:820px}
+.iw{flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:14px;display:flex;align-items:flex-end;padding:10px 14px;gap:10px;transition:all .2s}
+.iw:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+textarea{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:var(--font);font-size:13.5px;resize:none;max-height:120px;min-height:22px;line-height:1.5}
+textarea::placeholder{color:var(--text3)}
+.snd{width:38px;height:38px;flex-shrink:0;background:linear-gradient(135deg,var(--accent),var(--purple));border:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:0 0 16px var(--accent-glow)}
+.snd:hover{opacity:.85;transform:scale(1.05)}
+.snd:active{transform:scale(.95)}
+.snd:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none}
+.hint{font-size:10px;color:var(--text3);margin-top:6px;text-align:center;letter-spacing:.03em}
+
+/* ── RIGHT PANEL ── */
+.rp{width:210px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);padding:12px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.rplbl{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.rpi{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:9px;background:var(--surface2);border:1px solid var(--border);font-size:11.5px;color:var(--text2);cursor:pointer;transition:all .15s;margin-bottom:4px}
+.rpi:hover{border-color:var(--accent);color:var(--text);background:var(--accent-soft)}
+.rpd{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sr{display:flex;justify-content:space-between;font-size:11px;padding:5px 0;border-bottom:1px solid var(--border)}
+.sr:last-child{border-bottom:none}
+.sl{color:var(--text3)}.sv{color:var(--text);font-weight:500;font-family:var(--mono);font-size:10px}
+
+/* Usage stats panel */
+.usage-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+.usage-row{display:flex;justify-content:space-between;font-size:11px;padding:3px 0}
+.usage-label{color:var(--text3)}.usage-val{color:var(--accent);font-weight:600;font-family:var(--mono);font-size:11px}
+
+@media(max-width:900px){.rp{display:none}}
+@media(max-width:600px){.sb{display:none}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN OVERLAY -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-card">
+    <div class="login-icon">⚡</div>
+    <div class="login-title">Welcome to PMO Agent</div>
+    <div class="login-sub">Please enter your details to get started.<br>This helps us track usage and improve the tool for your team.</div>
+
+    <label class="login-label">Your Full Name</label>
+    <input class="login-input" id="loginName" type="text" placeholder="e.g. Sarah Johnson" maxlength="80" />
+
+    <label class="login-label">Your Team / Department</label>
+    <input class="login-input" id="loginTeam" type="text" placeholder="e.g. PMO, D365 Implementation, Finance" maxlength="80" onkeydown="if(event.key==='Enter') doLogin()" />
+
+    <button class="login-btn" onclick="doLogin()">Enter PMO Agent →</button>
+    <div class="login-note">🔒 Your name is only used for usage reporting by your PMO lead.<br>No passwords or personal data are stored.</div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="logo">
+    <div class="lmark">⚡</div>
+    <div>
+      <div class="lname">PMO Agent</div>
+      <div class="lsub">Project & Technology Intelligence</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="hbs">
+      <span class="hb">PMBOK 7</span>
+      <span class="hb">D365</span>
+      <span class="hb">ADO</span>
+      <span class="hb">Agile</span>
+      <span class="hb live">● Live</span>
+    </div>
+    <div class="user-badge" id="userBadge" onclick="resetUser()" title="Click to switch user">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <div class="user-name" id="userNameDisplay">Not logged in</div>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <div class="sb">
+    <div class="slbl"><div class="slbl-dot" style="background:#0078d4"></div>PM Frameworks</div>
+    <button class="sbtn active" onclick="ask('Give me a comprehensive overview of PMBOK 7 — its 12 principles and 8 performance domains with practical examples')"><span class="si">📚</span> PMBOK 7</button>
+    <button class="sbtn" onclick="ask('Explain Agile frameworks — Scrum, Kanban, SAFe — with guidance on when to use each')"><span class="si">⚡</span> Agile / Scrum</button>
+    <button class="sbtn" onclick="ask('When should I use hybrid project management? Give me a practical decision framework.')"><span class="si">🔀</span> Hybrid PM</button>
+    <button class="sbtn" onclick="ask('Explain PRINCE2 — its 7 principles, 7 themes, 7 processes and how it compares to PMBOK')"><span class="si">👑</span> PRINCE2</button>
+    <div class="sdv"></div>
+
+    <div class="slbl"><div class="slbl-dot" style="background:#22c55e"></div>Templates</div>
+    <button class="sbtn" onclick="askTemplate('Project Charter','docx')"><span class="si">📄</span> Project Charter</button>
+    <button class="sbtn" onclick="askTemplate('Work Breakdown Structure WBS','xlsx')"><span class="si">🌳</span> WBS</button>
+    <button class="sbtn" onclick="askTemplate('RACI Matrix','xlsx')"><span class="si">👥</span> RACI Matrix</button>
+    <button class="sbtn" onclick="askTemplate('Risk Register','xlsx')"><span class="si">⚠️</span> Risk Register</button>
+    <button class="sbtn" onclick="askTemplate('Stakeholder Register and Engagement Matrix','xlsx')"><span class="si">🤝</span> Stakeholder Map</button>
+    <button class="sbtn" onclick="askTemplate('RAID Log Risks Assumptions Issues Dependencies','xlsx')"><span class="si">📋</span> RAID Log</button>
+    <button class="sbtn" onclick="askTemplate('Cutover Plan','xlsx')"><span class="si">🚀</span> Cutover Plan</button>
+    <button class="sbtn" onclick="askTemplate('Project Kickoff Meeting Agenda','docx')"><span class="si">🎯</span> Kickoff Agenda</button>
+    <button class="sbtn" onclick="askTemplate('Communications Management Plan','docx')"><span class="si">📢</span> Comms Plan</button>
+    <button class="sbtn" onclick="askTemplate('ADO Sprint Plan','xlsx')"><span class="si">🏃</span> ADO Sprint Plan</button>
+    <button class="sbtn" onclick="askTemplate('Timesheet','xlsx')"><span class="si">⏱️</span> Timesheet</button>
+    <button class="sbtn" onclick="askTemplate('D365 Fit-Gap Analysis','xlsx')"><span class="si">📊</span> D365 Fit-Gap</button>
+    <button class="sbtn" onclick="askTemplate('D365 Go-Live Checklist','xlsx')"><span class="si">✅</span> Go-Live Checklist</button>
+    <div class="sdv"></div>
+
+    <div class="slbl"><div class="slbl-dot" style="background:#8b5cf6"></div>D365 ERP</div>
+    <button class="sbtn" onclick="ask('Give me an overview of Dynamics 365 Finance & Operations — modules, architecture, and implementation approach')"><span class="si">💼</span> D365 F&O Overview</button>
+    <button class="sbtn" onclick="ask('Give me an overview of Dynamics 365 Business Central — modules, features, and when to choose it over F&O')"><span class="si">🏢</span> D365 BC Overview</button>
+    <button class="sbtn" onclick="ask('Explain D365 F&O implementation methodology — phases, key activities, and best practices')"><span class="si">🗺️</span> Implementation Guide</button>
+    <button class="sbtn" onclick="ask('Explain D365 data migration best practices — DIXF, data entities, staging, validation, and cutover approach')"><span class="si">📦</span> Data Migration</button>
+    <button class="sbtn" onclick="ask('Explain D365 cutover planning — activities, timeline, go-live readiness criteria, and rollback plan')"><span class="si">🔄</span> Cutover Planning</button>
+    <button class="sbtn" onclick="ask('Explain D365 integrations — OData, DIXF, Power Platform, Azure Service Bus, and Logic Apps')"><span class="si">🔌</span> Integrations</button>
+    <button class="sbtn" onclick="ask('Explain D365 security — roles, duties, privileges, security policies, and best practices')"><span class="si">🔐</span> Security & Roles</button>
+    <div class="sdv"></div>
+
+    <div class="slbl"><div class="slbl-dot" style="background:#f59e0b"></div>Azure DevOps</div>
+    <button class="sbtn" onclick="ask('Explain ADO responsibilities for each role — Developer, PM, QA, and Functional Consultant — with specific work items and activities')"><span class="si">👤</span> Role Responsibilities</button>
+    <button class="sbtn" onclick="ask('What are the Developer responsibilities in Azure DevOps — work items, branching, commits, pull requests, and pipeline tasks?')"><span class="si">💻</span> Developer Tasks</button>
+    <button class="sbtn" onclick="ask('What are the Project Manager responsibilities in Azure DevOps — sprint planning, backlog, capacity, reporting, and dashboards?')"><span class="si">📊</span> PM Tasks</button>
+    <button class="sbtn" onclick="ask('What are the QA responsibilities in Azure DevOps — test plans, test cases, bug logging, UAT, and regression testing?')"><span class="si">🧪</span> QA Tasks</button>
+    <button class="sbtn" onclick="ask('What are the Functional Consultant responsibilities in Azure DevOps — user stories, acceptance criteria, config tasks, and demos?')"><span class="si">⚙️</span> Functional Tasks</button>
+    <button class="sbtn" onclick="ask('Explain ADO sprint ceremonies, velocity tracking, burndown charts, and sprint reporting best practices')"><span class="si">🏃</span> Sprint Management</button>
+    <div class="sdv"></div>
+
+    <div class="slbl"><div class="slbl-dot" style="background:#06b6d4"></div>Timesheet</div>
+    <button class="sbtn" onclick="ask('Explain timesheet management best practices for project-based organisations — time tracking, approval workflows, utilisation, and variance analysis')"><span class="si">⏱️</span> Timesheet Guide</button>
+    <button class="sbtn" onclick="ask('How does timesheet management integrate with D365 Project Accounting and Azure DevOps?')"><span class="si">🔗</span> D365 Integration</button>
+    <div class="sdv"></div>
+
+    <div class="slbl"><div class="slbl-dot" style="background:#ef4444"></div>Knowledge Areas</div>
+    <button class="sbtn" onclick="ask('Explain scope management best practices in PMBOK 7')"><span class="si">🎯</span> Scope</button>
+    <button class="sbtn" onclick="ask('Explain schedule management — critical path, compression, float, and agile scheduling')"><span class="si">📅</span> Schedule</button>
+    <button class="sbtn" onclick="ask('Explain cost management — budgeting, PERT, parametric and Earned Value Management with formulas')"><span class="si">💰</span> Cost / EVM</button>
+    <button class="sbtn" onclick="ask('Walk me through the full risk management process with identification, analysis and response strategies')"><span class="si">⚠️</span> Risk</button>
+    <button class="sbtn" onclick="ask('Explain stakeholder engagement — how to identify, analyse, and maintain effective engagement')"><span class="si">🤝</span> Stakeholders</button>
+  </div>
+
+  <!-- Chat -->
+  <div class="chat">
+    <div class="msgs" id="msgs">
+      <div class="wlc" id="welcome">
+        <span class="wi">⚡</span>
+        <h1>PMO & Technology Intelligence</h1>
+        <p>Expert guidance across PMBOK 7, D365 F&O & BC, Azure DevOps, Agile, and project templates.<br>Ask anything — or use the sidebar to navigate topics and generate downloadable templates.</p>
+        <div class="qg">
+          <div class="qc" onclick="ask('What are the 12 PMBOK 7 principles and 8 performance domains? Give me a practical summary.')"><div class="qt">📐 PMBOK 7 Overview</div><div class="qd">12 principles & 8 domains explained</div></div>
+          <div class="qc" onclick="askTemplate('Cutover Plan','xlsx')"><div class="qt">🚀 Cutover Plan Template</div><div class="qd">D365 go-live cutover template</div></div>
+          <div class="qc" onclick="ask('Explain ADO responsibilities for Developer, PM, QA and Functional Consultant with specific work items')"><div class="qt">👥 ADO Role Guide</div><div class="qd">Dev, PM, QA & Functional tasks</div></div>
+          <div class="qc" onclick="ask('Compare D365 Finance & Operations vs Business Central — when to use each and key differences')"><div class="qt">💼 D365 F&O vs BC</div><div class="qd">Choose the right Dynamics platform</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="ia">
+      <div class="ir">
+        <div class="iw">
+          <textarea id="inp" rows="1" placeholder="Ask about PMBOK, D365, ADO, templates, risk, agile, cutover planning…" onkeydown="onKey(event)" oninput="rsz(this)"></textarea>
+        </div>
+        <button class="snd" id="sbtn" onclick="send()" title="Send">
+          <svg width="15" height="15" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+      <div class="hint">Enter to send · Shift+Enter for new line · PMBOK 7 · D365 F&O & BC · Azure DevOps · Agile</div>
+    </div>
+  </div>
+
+  <!-- Right Panel -->
+  <div class="rp">
+    <div>
+      <div class="rplbl">📐 PMBOK 7 Domains</div>
+      <div class="rpi" onclick="ask('Explain the Stakeholder performance domain in PMBOK 7')"><div class="rpd" style="background:#0078d4"></div>Stakeholders</div>
+      <div class="rpi" onclick="ask('Explain the Team performance domain in PMBOK 7')"><div class="rpd" style="background:#8b5cf6"></div>Team</div>
+      <div class="rpi" onclick="ask('Explain the Development Approach and Life Cycle domain in PMBOK 7')"><div class="rpd" style="background:#22c55e"></div>Dev Approach</div>
+      <div class="rpi" onclick="ask('Explain the Planning performance domain in PMBOK 7')"><div class="rpd" style="background:#f59e0b"></div>Planning</div>
+      <div class="rpi" onclick="ask('Explain the Project Work performance domain in PMBOK 7')"><div class="rpd" style="background:#ef4444"></div>Project Work</div>
+      <div class="rpi" onclick="ask('Explain the Delivery performance domain in PMBOK 7')"><div class="rpd" style="background:#06b6d4"></div>Delivery</div>
+      <div class="rpi" onclick="ask('Explain the Measurement performance domain in PMBOK 7')"><div class="rpd" style="background:#22c55e"></div>Measurement</div>
+      <div class="rpi" onclick="ask('Explain the Uncertainty performance domain in PMBOK 7')"><div class="rpd" style="background:#f59e0b"></div>Uncertainty</div>
+    </div>
+    <div>
+      <div class="rplbl">💼 D365 Modules</div>
+      <div class="rpi" onclick="ask('Explain D365 F&O Finance module — GL, AP, AR, Fixed Assets, Cash & Bank')"><div class="rpd" style="background:#0078d4"></div>Finance (F&O)</div>
+      <div class="rpi" onclick="ask('Explain D365 F&O Supply Chain — Procurement, Inventory, Warehouse, Transportation')"><div class="rpd" style="background:#8b5cf6"></div>Supply Chain</div>
+      <div class="rpi" onclick="ask('Explain D365 F&O Project Accounting — contracts, billing, timesheets, revenue recognition')"><div class="rpd" style="background:#22c55e"></div>Project Accounting</div>
+      <div class="rpi" onclick="ask('Explain D365 Business Central Finance — chart of accounts, budgeting, bank reconciliation')"><div class="rpd" style="background:#f59e0b"></div>BC Finance</div>
+      <div class="rpi" onclick="ask('Explain D365 Business Central Sales & Purchase — order management, invoicing, vendors')"><div class="rpd" style="background:#06b6d4"></div>BC Sales & Purchase</div>
+    </div>
+    <div>
+      <div class="rplbl">📊 My Session</div>
+      <div class="usage-card">
+        <div class="usage-row"><span class="usage-label">User</span><span class="usage-val" id="statUser">—</span></div>
+        <div class="usage-row"><span class="usage-label">Team</span><span class="usage-val" id="statTeam">—</span></div>
+        <div class="usage-row"><span class="usage-label">Questions</span><span class="usage-val" id="statQuestions">0</span></div>
+        <div class="usage-row"><span class="usage-label">Templates</span><span class="usage-val" id="statTemplates">0</span></div>
+        <div class="usage-row"><span class="usage-label">Session</span><span class="usage-val" id="statTime">0m</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="rplbl">🎓 Certifications</div>
+      <div class="rpi" onclick="ask('How do I prepare for the PMP exam? Eligibility, format, topics, and study strategy.')"><div class="rpd" style="background:#f59e0b"></div>PMP prep</div>
+      <div class="rpi" onclick="ask('Explain D365 F&O certifications — MB-300, MB-310, MB-320, MB-330 exam guides')"><div class="rpd" style="background:#0078d4"></div>D365 F&O certs</div>
+      <div class="rpi" onclick="ask('Explain D365 BC certifications — MB-800 exam guide and preparation tips')"><div class="rpd" style="background:#8b5cf6"></div>D365 BC certs</div>
+      <div class="rpi" onclick="ask('Compare PSM vs CSM Scrum certifications and AZ-400 DevOps certification')"><div class="rpd" style="background:#22c55e"></div>Scrum / DevOps</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── USER STATE ──
+let userName = '', userTeam = '', history = [], busy = false;
+let questionCount = 0, templateCount = 0;
+const sessionStart = Date.now();
+
+function doLogin(){
+  const name = document.getElementById('loginName').value.trim();
+  const team = document.getElementById('loginTeam').value.trim();
+  if(!name){ document.getElementById('loginName').focus(); document.getElementById('loginName').style.borderColor='var(--red)'; return; }
+  userName = name;
+  userTeam = team || 'Unspecified';
+  document.getElementById('loginOverlay').classList.add('hidden');
+  // Update header badge
+  const initials = name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+  document.getElementById('userAvatar').textContent = initials;
+  document.getElementById('userNameDisplay').textContent = name;
+  document.getElementById('statUser').textContent = name.split(' ')[0];
+  document.getElementById('statTeam').textContent = userTeam.substring(0,10);
+  // Start session timer
+  setInterval(updateTimer, 60000);
+}
+
+function resetUser(){
+  if(confirm('Switch user? This will clear the current session.')){
+    userName=''; userTeam=''; history=[]; questionCount=0; templateCount=0;
+    document.getElementById('loginOverlay').classList.remove('hidden');
+    document.getElementById('loginName').value='';
+    document.getElementById('loginTeam').value='';
+    document.getElementById('msgs').innerHTML='';
+    const wlc=document.createElement('div'); wlc.className='wlc'; wlc.id='welcome';
+    wlc.innerHTML='<span class="wi">⚡</span><h1>PMO & Technology Intelligence</h1><p>Enter your details to get started.</p>';
+    document.getElementById('msgs').appendChild(wlc);
+  }
+}
+
+function updateTimer(){
+  const mins = Math.floor((Date.now()-sessionStart)/60000);
+  document.getElementById('statTime').textContent = mins < 60 ? mins+'m' : Math.floor(mins/60)+'h '+(mins%60)+'m';
+}
+
+// ── UTILS ──
+function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function fmt(text){
+  let pills='';
+  if(/pmbok\s*7|performance domain|12 principles/i.test(text)) pills+='<span class="pill pb">PMBOK 7</span>';
+  if(/template|register|charter|raci|wbs|raid|cutover|checklist|timesheet/i.test(text)) pills+='<span class="pill pg">Template</span>';
+  if(/agile|scrum|sprint|kanban/i.test(text)) pills+='<span class="pill pa">Agile</span>';
+  if(/d365|dynamics|f&o|business central/i.test(text)) pills+='<span class="pill pp">D365</span>';
+  if(/ado|azure devops|work item|user story/i.test(text)) pills+='<span class="pill pc">ADO</span>';
+  let o=esc(text)
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/`([^`]+)`/g,'<code>$1</code>')
+    .replace(/^#{1,3}\s+(.+)$/gm,'<h3>$1</h3>')
+    .replace(/^---+$/gm,'<hr>')
+    .replace(/^\d+\.\s+(.+)$/gm,'<li>$1</li>')
+    .replace(/^[-*]\s+(.+)$/gm,'<li>$1</li>')
+    .replace(/(<li>[\s\S]*?<\/li>\s*)+/g,m=>`<ul>${m}</ul>`)
+    .replace(/\n\n+/g,'</p><p>')
+    .replace(/\n/g,'<br>');
+  return (pills?`<div style="margin-bottom:8px">${pills}</div>`:'')+`<p>${o}</p>`;
+}
+
+function addMsg(role,content,extraHtml=''){
+  const w=document.getElementById('welcome'); if(w)w.remove();
+  const c=document.getElementById('msgs');
+  const d=document.createElement('div'); d.className='msg '+role;
+  const initials = userName ? userName.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase() : 'U';
+  const a=document.createElement('div'); a.className='av';
+  a.textContent=role==='assistant'?'PM':initials;
+  const b=document.createElement('div'); b.className='bub';
+  b.innerHTML=(role==='assistant'?fmt(content):esc(content))+extraHtml;
+  d.appendChild(a); d.appendChild(b);
+  c.appendChild(d); c.scrollTop=c.scrollHeight;
+}
+
+function showTyping(){
+  const c=document.getElementById('msgs');
+  const d=document.createElement('div'); d.className='msg assistant'; d.id='typ';
+  const a=document.createElement('div'); a.className='av'; a.textContent='PM';
+  const b=document.createElement('div'); b.className='bub';
+  b.innerHTML='<div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+  d.appendChild(a); d.appendChild(b);
+  c.appendChild(d); c.scrollTop=c.scrollHeight;
+}
+
+function rsz(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px'}
+function onKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}}
+async function ask(q){document.getElementById('inp').value=q;await send()}
+
+// ── TEMPLATE DOWNLOAD ──
+async function askTemplate(name, fileType){
+  const prompt=`Generate a complete, ready-to-use ${name} template. Format as a detailed table with all relevant columns and at least 5 rows of realistic sample data. Include field descriptions and instructions at the top. Make it immediately usable for a real project.`;
+  document.getElementById('inp').value=`Generate a ${name} template`;
+  await sendCore(prompt, `Generate a ${name} template`, name, fileType, true);
+}
+
+function downloadTemplate(btn){
+  const content=decodeURIComponent(btn.dataset.content);
+  const name=decodeURIComponent(btn.dataset.name);
+  const type=btn.dataset.type;
+  if(type==='xlsx'){ downloadCSV(content,name); } else { downloadTXT(content,name); }
+}
+
+function downloadCSV(content,name){
+  const lines=content.split('\n');
+  const csvRows=[];
+  for(const line of lines){
+    const t=line.trim();
+    if(t.startsWith('|')&&t.endsWith('|')){
+      if(t.replace(/[\|\s\-]/g,'').length===0) continue;
+      const cells=t.split('|').filter(c=>c.trim()!=='');
+      csvRows.push(cells.map(c=>`"${c.trim().replace(/"/g,'""')}"`).join(','));
+    } else if(t){
+      csvRows.push(`"${t.replace(/"/g,'""')}"`);
+    }
+  }
+  if(csvRows.length===0) content.split('\n').forEach(l=>csvRows.push(`"${l.replace(/"/g,'""')}"`));
+  const blob=new Blob(['\uFEFF'+csvRows.join('\n')],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=name.replace(/\s+/g,'-')+'.csv'; a.click(); URL.revokeObjectURL(url);
+}
+
+function downloadTXT(content,name){
+  const clean=content.replace(/\*\*(.+?)\*\*/g,'$1').replace(/#{1,3}\s+/g,'').replace(/`([^`]+)`/g,'$1');
+  const blob=new Blob([clean],{type:'text/plain;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=name.replace(/\s+/g,'-')+'.txt'; a.click(); URL.revokeObjectURL(url);
+}
+
+// ── CORE SEND ──
+async function sendCore(prompt, displayText, templateName, fileType, isTemplate){
+  if(busy) return;
+  busy=true;
+  document.getElementById('sbtn').disabled=true;
+  document.getElementById('inp').value='';
+  document.getElementById('inp').style.height='auto';
+
+  addMsg('user', displayText);
+  history.push({role:'user',content:prompt});
+  questionCount++;
+  if(isTemplate) templateCount++;
+  document.getElementById('statQuestions').textContent=questionCount;
+  document.getElementById('statTemplates').textContent=templateCount;
+  showTyping();
+
+  try{
+    const res=await fetch('/api/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({messages:history, userName, userTeam})
+    });
+    const data=await res.json();
+    const t=document.getElementById('typ'); if(t)t.remove();
+    if(data.error){ addMsg('assistant','⚠️ '+data.error); }
+    else{
+      history.push({role:'assistant',content:data.reply});
+      if(history.length>20) history=history.slice(-18);
+      let extra='';
+      if(isTemplate){
+        extra=`<br><button class="dl-btn" onclick="downloadTemplate(this)" data-content="${encodeURIComponent(data.reply)}" data-name="${encodeURIComponent(templateName)}" data-type="${fileType}">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download ${templateName} (.${fileType==='xlsx'?'csv':fileType})
+        </button>`;
+      }
+      addMsg('assistant', data.reply, extra);
+    }
+  }catch(err){
+    const t=document.getElementById('typ'); if(t)t.remove();
+    addMsg('assistant','⚠️ Error: '+err.message);
+  }
+  busy=false;
+  document.getElementById('sbtn').disabled=false;
+  document.getElementById('inp').focus();
+}
+
+async function send(){
+  const inp=document.getElementById('inp');
+  const text=inp.value.trim();
+  if(!text||busy) return;
+  const templateKeywords=['project charter','wbs','raci','risk register','stakeholder','raid log','cutover plan','kickoff agenda','comms plan','sprint plan','timesheet','fit-gap','go-live checklist'];
+  const isTemplate=templateKeywords.some(k=>text.toLowerCase().includes(k))&&/template|generate|create|make/i.test(text);
+  if(isTemplate){
+    const matched=templateKeywords.find(k=>text.toLowerCase().includes(k))||'Template';
+    const niceName=matched.split(' ').map(w=>w[0].toUpperCase()+w.slice(1)).join(' ');
+    const fileType=['wbs','raci','risk register','stakeholder','raid log','cutover plan','sprint plan','timesheet','fit-gap','go-live checklist'].includes(matched)?'xlsx':'docx';
+    await sendCore(text, text, niceName, fileType, true);
+  } else {
+    await sendCore(text, text, null, null, false);
+  }
+}
+</script>
+</body>
+</html>
